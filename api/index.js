@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 mongoose.connect(
-  process.env.MONGO
+'mongodb+srv://vishal:hotblogs@sleekscript.xnjzzvn.mongodb.net/sleekScript?retryWrites=true&w=majority&appName=sleekScript'
 ).then(()=>{
     console.log("mongodb is connected");
 })
@@ -13,7 +13,6 @@ mongoose.connect(
 })
 
 const app = express();
-
 
 
 

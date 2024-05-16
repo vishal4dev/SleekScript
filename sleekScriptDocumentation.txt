@@ -45,4 +45,16 @@ to run : npm run dev
 which takes a key and replaces it with a value like the string here, else we'll be uploadiing the password on github
 
 
+-------------------------------------------------------
+//creating user model
+creating schemas(rules):
+In the context of your code snippet, it seems that you are creating schemas or rules for your database. These schemas define the structure and constraints for the data that will be stored in the database. 
+
+For example, a schema might define a "User" table with columns like "id", "name", and "email". It can also specify constraints such as primary keys, foreign keys, and unique constraints. These schemas help ensure data integrity and consistency within the database.
+
+By creating schemas, you are essentially defining the blueprint for how your data will be organized and stored in the database. This allows you to enforce data validation and maintain data consistency throughout your application.
+
+
+
+
 

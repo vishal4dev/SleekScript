@@ -54,7 +54,29 @@ For example, a schema might define a "User" table with columns like "id", "name"
 
 By creating schemas, you are essentially defining the blueprint for how your data will be organized and stored in the database. This allows you to enforce data validation and maintain data consistency throughout your application.
 
+---------------------------------------------------------
 
+//create a test api routes
+its a good practice to crate diffrent folders for routes we call them controllers , controllers have logics and functions
+
+its not a good practice to put all the api routes in index.js so we create a folder routes
+
+its also not a good practice to write all the logic in routes so we create a new folder controllers to define these control logics and functions
+
+app.get is a method in Express.js used for defining routes that only handle HTTP GET requests.
+It specifies a callback function to be executed when a GET request with the specified route pattern is received.
+
+app.use is a method in Express.js used for mounting middleware functions.
+Middleware functions are functions that have access to the request object (req), the response object (res), and the next middleware function in the application's request-response cycle.
+
+!!!problem
+The problem was with how the routes were being mounted in your main file (`main.js`). In your initial code, you were using `app.get('/api/user/test', userRoutes)` to mount the `userRoutes` router, which was incorrect.
+
+The `app.get` method is used to define a route handler for HTTP GET requests, but you wanted to mount an entire router (`userRoutes`) under a specific path. For that purpose, you should use `app.use` instead of `app.get`.
+
+So, the correction involved changing `app.get('/api/user/test', userRoutes)` to `app.use('/api/user', userRoutes)`. This tells Express to use the `userRoutes` router for any path that starts with `/api/user`, which includes the `/test` route you defined inside `userRoutes`.
+
+By making this change, your server correctly routes requests to `/api/user/test` to the `test` function defined in your `user.controller.js`.
 
 
 

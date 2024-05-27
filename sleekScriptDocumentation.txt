@@ -79,4 +79,22 @@ So, the correction involved changing `app.get('/api/user/test', userRoutes)` to 
 By making this change, your server correctly routes requests to `/api/user/test` to the `test` function defined in your `user.controller.js`.
 
 
+----------------------------------------------------
+Creating signup api route
 
+Again we started by making api routes ,  so we created auth.route in routes folder 
+we want to create something so we'll use POST request
+
+so we'll create the auth logic asynchronous..
+When designing a signup authentication route, making it asynchronous is generally the preferred approach. Here are the key reasons why:
+
+Non-blocking I/O Operations: Signup processes often involve operations that can take time, such as database access, sending verification emails, or calling third-party APIs. Asynchronous programming allows these operations to run concurrently without blocking the main execution thread, leading to better performance and responsiveness.
+
+*We can test apis using softwares without having to make frontend.. eg - pausemon,insomnia(user-friendly)
+downloaded insomnia
+ 
+ ->not allowed to send json to backend
+
+//try and hash all users password in database as someone can hack the database and getacces to all the pass 
+
+to do the above i installed "bcryptjs"

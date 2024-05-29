@@ -98,3 +98,6 @@ downloaded insomnia
 //try and hash all users password in database as someone can hack the database and getacces to all the pass 
 
 to do the above i installed "bcryptjs"
+
+In a MERN (MongoDB, Express.js, React, Node.js) stack application, the utils (utilities) directory is used to store utility functions and modules that can be reused throughout the application. These utilities often provide common functionality that is needed in multiple parts of the application, promoting code reuse and modularity.
+---------------------------------------

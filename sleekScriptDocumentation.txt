@@ -101,3 +101,11 @@ to do the above i installed "bcryptjs"
 
 In a MERN (MongoDB, Express.js, React, Node.js) stack application, the utils (utilities) directory is used to store utility functions and modules that can be reused throughout the application. These utilities often provide common functionality that is needed in multiple parts of the application, promoting code reuse and modularity.
 ---------------------------------------
+//add functionality to signup page
+for submission we'll add onsubmit event listener
+
+//adding proxy in vite
+
+when we are addin more than one http element inside a bracket we need to insert them inside empty brackets
+
+using react hook for signup button to take me to other directory

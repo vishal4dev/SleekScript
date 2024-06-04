@@ -1,6 +1,7 @@
 import User from '../models/user.models.js';
 import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
+import jwt from 'jsonwebtoken';
 export const signup = async (req, res,next) => {
     const { username, email, password } = req.body;
     // console.log(req.body);//instead of console.log(req.body) we will save the user in the database
@@ -27,4 +28,32 @@ export const signup = async (req, res,next) => {
        next(error);
    };
 };
-    
+
+//signin controller function will be implemented here 
+export const signin = async (req, res,next) => {
+     const {email, password} = req.body;
+        if(!email || !password || email === "" || password === ""){
+            next(errorHandler(400,"All fields are required"));//use next to pass the error to the error handler
+        }
+
+        try {
+            const validUser = await User.findOne({email});//find the user with the email
+            if(!validUser){
+                return next(errorHandler(404,"wrong  email"));//if user not found then pass the error to the error handler
+            }
+            const validPassword = bcryptjs.compareSync(password, validUser.password);//compare the password with the hashed password
+            if(!validPassword){
+                return next(errorHandler(400,"wrong credentials"));//if password is invalid then pass the error to the error handler
+            }
+
+            //creating a token for authentication using jwt
+
+            const token = jwt.sign({id: validUser._id}, process.env.JWT_SECRET, {expiresIn: '1h'});//create a token with email and id of the user and secret key and expiration time of 1 hour
+
+            const {password: pass, ...rest} = validUser._doc;//remove the password from the user data(the hashed one)
+            
+            res.status(200).cookie('access_token',token,{httponly:true}).json(rest);//return the token to the user
+        } catch (error) {
+            next(error)
+        }
+}

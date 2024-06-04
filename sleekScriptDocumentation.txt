@@ -119,3 +119,9 @@ for all the functions that will be used throughout the web page we code it insid
    target='_blank'//this will open the link in a new tab
                     rel='noopener noreferrer'>
                         //this prevents the new tab from accessing the window object of the parent tab
+
+----------------------------------------------
+ //create sign-in api route     
+ created all the logic inside auth.controller.js
+ ->authentication of the user:
+    by using a package called json web token               

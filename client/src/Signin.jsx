@@ -1,15 +1,18 @@
 import { Alert, Button, Label, Spinner, TextInput } from 'flowbite-react';
-import { set } from 'mongoose';
+
 import React, { useState } from 'react';
 import { Link , useNavigate} from 'react-router-dom';
+import { useDispatch,useSelector } from 'react-redux';
+import { signInStart,signInSuccess,signInFailure } from './redux/user/userSlice';
 
 export default function SignIn() {
   
   //this is used to keep the track of the form data in a continuous manner
 
   const [formData, setFormData] = useState({});
-  const [errorMessage,setErrorMessage] = useState(null);//this is used to store the error message if the user enters the wrong data
-  const [loading,setLoading]=useState(false);//this is used to show the loading spinner when the user clicks the submit button
+
+  const {loading,error:errorMessage} = useSelector((state)=>state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,11 +25,10 @@ export default function SignIn() {
  const handleSubmit = async (e) => {  
     e.preventDefault();//this will prevent the page from reloading after every entry
     if(!formData.email || !formData.password){
-      return setErrorMessage('Please fill in all the fields');
+      return dispatch(signInFailure('Please fill in all the fields'));
     }
     try {
-      setLoading(true);
-      setErrorMessage(null);
+      dispatch(signInStart());//this will set the loading to true and error to null
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: {
@@ -36,15 +38,15 @@ export default function SignIn() {
       });
       const data = await res.json();
       if(data.success==false){
-        return setErrorMessage(data.message);
+          dispatch(signInFailure(data.message));//this will set the loading to false and error to action.payload
       }
-      setLoading(false);
+   
       if(res.ok){
+        dispatch(signInSuccess(data));//this will set the loading to false and error to null and currentUser to action.payload
         navigate('/');
       }
     } catch (error) {
-      setErrorMessage(error.message);
-      setLoading(false);
+     dispatch(signInFailure(error.message));//this will set the loading to false and error to action.payload
     }
   }
 
@@ -73,6 +75,7 @@ export default function SignIn() {
       {/*right side*/}
       <div className='flex-1'>
         <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
+
           <div>
             <Label value = 'Your email'/>
             <TextInput
@@ -85,7 +88,7 @@ export default function SignIn() {
             <Label value = 'Your password'/>
             <TextInput
             type='password'
-            placeholder='***********'
+            placeholder='Password'
             id='password' onChange={handleChange}/>
 
           </div>
@@ -95,12 +98,12 @@ export default function SignIn() {
               <Spinner size='sm'/>
               <span className='pl-3'>Loading...</span>
               </>
-            ) : 'Sign In'}
+            ) : 'Sign Up'}
           </Button>
         </form>
         <div className='flex gap-2 text-sm mt-5'>
-          <span>Don't have an account?</span>
-          <Link to='/sign-up' className='text-blue-500'>Sign Up</Link>
+          <span>Have an account?</span>
+          <Link to='/sign-in' className='text-blue-500'>Sign In</Link>
         </div>
         {
           errorMessage && <Alert className='mt-5' color='failure'>

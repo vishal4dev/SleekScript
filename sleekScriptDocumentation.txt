@@ -136,3 +136,9 @@ Both JWT and cookies are used to maintain user sessions and authenticate users o
 
 ---------------------------------------------------
 //adding redux toolkit
+
+added redux toolkit
+downloaded an extension to track sign in procedure
+
+to make the data persist as the data got instantiated after every refresh we will donwload another extension
+redux toolkit this will save the info localy. So when we refresh the page we wont see the data vanish before our eyes

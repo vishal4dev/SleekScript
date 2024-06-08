@@ -159,3 +159,7 @@ This is very important
 -------------------------------------------------
 //make the dashboard private
 create a component that can protect this page and covert that page with that component
+-------------------------------------------------
+//create ui of the dashboard section
+
+use react hooks to know at which tab we are in

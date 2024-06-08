@@ -163,3 +163,6 @@ create a component that can protect this page and covert that page with that com
 //create ui of the dashboard section
 
 use react hooks to know at which tab we are in
+--------------------------------------------------
+//complete profile page ui
+

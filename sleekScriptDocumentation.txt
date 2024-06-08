@@ -152,3 +152,7 @@ to make a pop up window we are using firebase
 This is very important
 -------------------------------------------------
 //update header section with user data
+
+-------------------------------------------------
+//dark mode funtionality
+

@@ -151,3 +151,4 @@ for signin and singup pages
 to make a pop up window we are using firebase 
 This is very important
 -------------------------------------------------
+//update header section with user data

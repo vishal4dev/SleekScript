@@ -156,3 +156,6 @@ This is very important
 -------------------------------------------------
 //dark mode funtionality
 
+-------------------------------------------------
+//make the dashboard private
+create a component that can protect this page and covert that page with that component

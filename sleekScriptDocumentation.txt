@@ -166,3 +166,5 @@ use react hooks to know at which tab we are in
 --------------------------------------------------
 //complete profile page ui
 
+--------------------------------------------------
+//user image upload funtionality

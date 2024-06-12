@@ -22,7 +22,7 @@ export default function DashSidebar() {
         <Sidebar.Items>
          <Sidebar.ItemGroup>
             <Link to='/dashboard?tab=profile'>
-            <Sidebar.Item active={tab==='profile'} icon={HiUser} label ={'user'} labelColor='dark'>
+            <Sidebar.Item active={tab==='profile'} icon={HiUser} label ={'user'} labelColor='dark' as = 'div'>
                 Profile
             </Sidebar.Item>
             </Link>
@@ -34,3 +34,4 @@ export default function DashSidebar() {
     </Sidebar>
   );
 }
+//added as div to the sidebar item to make it a div instead of a link because we are using a link to wrap the sidebar item which is also a link so we were getting a warining on the console

@@ -173,3 +173,8 @@ use react hooks to know at which tab we are in
 ->go to routes folder 
 ->create new route for user.routes.js
 ->update will be a put request//push works the same as put request
+-------------------------------------------------
+//create update user profile functionality
+
+->create form data and submit it using the update route to the database
+->so well add on submit event listener to the form

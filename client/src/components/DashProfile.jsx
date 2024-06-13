@@ -6,6 +6,9 @@ import {app} from '../firebase.js';
 import { ref, uploadBytesResumable,getDownloadURL } from 'firebase/storage';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
+import {updateStart,updateSuccess,updateFailure} from '../redux/user/userSlice';
+import { useDispatch } from 'react-redux';
+import { set } from 'mongoose';
 
 
 
@@ -15,9 +18,14 @@ export default function DashProfile() {
     const [imageFileURL,setImageFileURL] = useState(null);
     const [imageFileUploadProgress,setImageFileUploadProgress] = useState(null);//this will be a number between 0 and 100
     const [imageFileUploadError,setImageFileUploadError] = useState(null);//this will be a string that will contain the error message if there is an error
+    const [formData,setFormData] = useState({});//this will be an object that will contain the form data [username,email,password
     const [imageFileUploading,setImageFileUploading] = useState(false);//this will be a boolean that will be true if the image is being uploaded
-    
+    const [updateUserSuccess,setUpdateUserSuccess] = useState(null);//this will be a boolean that will be true if the user is updated successfully
+
+    const [updateUserError,setUpdateUserError] = useState(null);//this will be a boolean that will be true if the user is updated successfully
+
     const filePickerRef = useRef(null);
+    const dispatch = useDispatch();
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if(file){
@@ -72,17 +80,60 @@ export default function DashProfile() {
                 // Handle successful uploads on complete
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     setImageFileURL(downloadURL);
+                    setFormData({...formData,profilePicture:downloadURL});
+                    setImageFileUploading(false);
                 }
             );
             }
         );
     };
-
+    const handleChange = (e) => {
+        setFormData({...formData,[e.target.id]:e.target.value});
+        //keep the other form data as it is and update the form data with the new value where e.target.id is the id of the input field and e.target.value is the value of the input field
+    };
+    const handleSubmit = async (e) => {
+        //this will prevent the form from refreshing the page
+        e.preventDefault();
+        setUpdateUserError(null);
+        setUpdateUserSuccess(null);
+        if(Object.keys(formData).length === 0){
+            setUpdateUserError("No changes made");
+            return;
+        }
+        if(imageFileUploading){
+            setUpdateUserError("Image is being uploaded");
+            return;
+        }
+        try {
+            dispatch(updateStart());
+            //we need to update the user in the database
+            //we need to update the user in the redux store
+            const res = await fetch(`/api/user/update/${currentUser._id}`,{ 
+                method:'PUT',
+                headers:{
+                    'Content-Type':'application/json',
+                },
+                body:JSON.stringify(formData),
+            });
+            const data = await res.json();
+            if(!res.ok){
+               dispatch(updateFailure(data.message));
+                setUpdateUserError(data.message);
+            }else{
+                dispatch(updateSuccess(data));
+                setUpdateUserSuccess("User updated successfully");
+            }
+            
+        } catch (error) {
+            dispatch(updateFailure(error.message));
+            setUpdateUserError(error.message);
+        }
+    };
 
   return (
     <div className='max-w-lg mx-auto p-3 w-full'>
         <h1 className='my-7 text-center font-semibold text-3xl'>Profile</h1>
-        <form className='flex flex-col gap-4'>
+        <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
             <input type="file" accept = 'image/*' onChange={handleImageChange} ref={filePickerRef} hidden/>
             <div className='relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full' onClick={()=>{
                 filePickerRef.current.click();
@@ -119,11 +170,11 @@ export default function DashProfile() {
             }
             <TextInput type = 'text' id='username'
             placeholder='username'
-            defaultValue={currentUser.username}/>
+            defaultValue={currentUser.username} onChange={handleChange}/>
 
             <TextInput type = 'email' id='email'
             placeholder='email'
-            defaultValue={currentUser.email}/>
+            defaultValue={currentUser.email} onChange={handleChange}/>
 
             <TextInput type = 'password' id='password'
             placeholder='password'
@@ -140,6 +191,16 @@ export default function DashProfile() {
                 Sign Out
             </span>
         </div>
+        {updateUserSuccess && (
+            <Alert color='success' className='mt-5'>
+                {updateUserSuccess}
+            </Alert>
+        )}
+        {updateUserError && (
+            <Alert color='failure' className='mt-5'>
+                {updateUserError}
+            </Alert>
+        )}
     </div>
   );
 };

@@ -168,3 +168,8 @@ use react hooks to know at which tab we are in
 
 --------------------------------------------------
 //user image upload funtionality
+-------------------------------------------------
+//add update user api route
+->go to routes folder 
+->create new route for user.routes.js
+->update will be a put request//push works the same as put request

@@ -178,3 +178,6 @@ use react hooks to know at which tab we are in
 
 ->create form data and submit it using the update route to the database
 ->so well add on submit event listener to the form
+-------------------------------------------------
+//create delete api route
+finally getting the hang of apis

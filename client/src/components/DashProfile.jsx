@@ -1,212 +1,337 @@
-import { Alert, Button, TextInput } from 'flowbite-react';
-import React, { useState,useRef, useEffect } from 'react'
+import { Alert, Button, Modal, TextInput } from 'flowbite-react';
+import React, { useState, useRef, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { getStorage } from 'firebase/storage';
-import {app} from '../firebase.js';
-import { ref, uploadBytesResumable,getDownloadURL } from 'firebase/storage';
+import { app } from '../firebase.js';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import {updateStart,updateSuccess,updateFailure} from '../redux/user/userSlice';
+import {
+    updateStart,
+    updateSuccess,
+    updateFailure,
+    deleteUserStart,
+    deleteUserSuccess,
+    deleteUserFailure,
+    signoutSuccess
+} from '../redux/user/userSlice';
 import { useDispatch } from 'react-redux';
-import { set } from 'mongoose';
-
-
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
 
 export default function DashProfile() {
-    const {currentUser} = useSelector(state => state.user);
-    const [imageFile,setImageFile] = useState(null);
-    const [imageFileURL,setImageFileURL] = useState(null);
-    const [imageFileUploadProgress,setImageFileUploadProgress] = useState(null);//this will be a number between 0 and 100
-    const [imageFileUploadError,setImageFileUploadError] = useState(null);//this will be a string that will contain the error message if there is an error
-    const [formData,setFormData] = useState({});//this will be an object that will contain the form data [username,email,password
-    const [imageFileUploading,setImageFileUploading] = useState(false);//this will be a boolean that will be true if the image is being uploaded
-    const [updateUserSuccess,setUpdateUserSuccess] = useState(null);//this will be a boolean that will be true if the user is updated successfully
-
-    const [updateUserError,setUpdateUserError] = useState(null);//this will be a boolean that will be true if the user is updated successfully
+    const { currentUser, error, loading } = useSelector(state => state.user);
+    const [imageFile, setImageFile] = useState(null);
+    const [imageFileURL, setImageFileURL] = useState(null);
+    const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
+    const [imageFileUploadError, setImageFileUploadError] = useState(null);
+    const [formData, setFormData] = useState({});
+    const [imageFileUploading, setImageFileUploading] = useState(false);
+    const [updateUserSuccess, setUpdateUserSuccess] = useState(null);
+    const [updateUserError, setUpdateUserError] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [userStats, setUserStats] = useState({ blogs: 0, likes: 0 });
+    const [statsLoading, setStatsLoading] = useState(true);
 
     const filePickerRef = useRef(null);
     const dispatch = useDispatch();
+
+    // Fetch user statistics
+    useEffect(() => {
+        if (currentUser) {
+            fetchUserStats();
+        }
+    }, [currentUser]);
+
+    const fetchUserStats = async () => {
+        try {
+            setStatsLoading(true);
+            // Fetch user's blogs
+            const res = await fetch(`/api/post/getposts?userId=${currentUser._id}`);
+            const data = await res.json();
+            
+            if (res.ok && data.posts) {
+                const totalBlogs = data.posts.length;
+                const totalLikes = data.posts.reduce((sum, post) => sum + (post.likes?.length || 0), 0);
+                setUserStats({ blogs: totalBlogs, likes: totalLikes });
+            }
+        } catch (error) {
+            console.log('Error fetching user stats:', error.message);
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if(file){
+        if (file) {
             setImageFile(file);
             setImageFileURL(URL.createObjectURL(file));
         }
-        //conversion of image to URL
-
     };
-   useEffect(() => {
-    if(imageFile){
-       uploadImage();
-    }
-   }, [imageFile]);
 
-   const uploadImage = async () => {
-    /*service firebase.storage {
-        match /b/{bucket}/o {
-          match /{allPaths=**} {
-            allow read;
-            allow write: if
-            request.resource.size < 2*1024 * 1024 &&
-            request.resource.contentType.matches('image/.*')
-          }
-        }*/
-          setImageFileUploading(true);
-          setImageFileUploadError(null);
-    const storage = getStorage(app);//app is the firebase app we created in the firebase.js file so when we want to use the storage we need to import it from the firebase storage and then we need to pass the app to it
+    useEffect(() => {
+        if (imageFile) {
+            uploadImage();
+        }
+    }, [imageFile]);
 
-    // const fileName =  imageFile.name;//this will throw error if we upload image 2 times with the same name so we need to generate a unique name for the image
-    const fileName =  new Date().getTime() +imageFile.name;//now this keeps the name unique 
+    const uploadImage = async () => {
+        setImageFileUploading(true);
+        setImageFileUploadError(null);
+        
+        const storage = getStorage(app);
+        const fileName = new Date().getTime() + imageFile.name;
+        const storageRef = ref(storage, fileName);
+        const uploadTask = uploadBytesResumable(storageRef, imageFile);
 
-    const storageRef = ref(storage,fileName);//this is the root reference of the storage
-
-    //upload task-> this is the task that will upload the image to the storage
-
-    const uploadTask = uploadBytesResumable(storageRef,imageFile);//this will upload the image to the storage
-    uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setImageFileUploadProgress(progress.toFixed(0));//toFixed(0) will round the number to the nearest whole number
+        uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setImageFileUploadProgress(progress.toFixed(0));
             },
             (error) => {
-                setImageFileUploadError("Could not upload the image(File must be less than 2MB)");
+                setImageFileUploadError('Could not upload image (File must be less than 2MB)');
                 setImageFileUploadProgress(null);
                 setImageFile(null);
                 setImageFileURL(null);
                 setImageFileUploading(false);
             },
-            () => {
-                // Handle successful uploads on complete
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    setImageFileURL(downloadURL);
-                    setFormData({...formData,profilePicture:downloadURL});
-                    setImageFileUploading(false);
-                }
-            );
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                setImageFileURL(downloadURL);
+                setFormData({ ...formData, profilePicture: downloadURL });
+                setImageFileUploading(false);
+                setImageFileUploadProgress(null);
             }
         );
     };
+
     const handleChange = (e) => {
-        setFormData({...formData,[e.target.id]:e.target.value});
-        //keep the other form data as it is and update the form data with the new value where e.target.id is the id of the input field and e.target.value is the value of the input field
+        setFormData({ ...formData, [e.target.id]: e.target.value });
     };
+
     const handleSubmit = async (e) => {
-        //this will prevent the form from refreshing the page
         e.preventDefault();
         setUpdateUserError(null);
         setUpdateUserSuccess(null);
-        if(Object.keys(formData).length === 0){
-            setUpdateUserError("No changes made");
+
+        if (Object.keys(formData).length === 0) {
+            setUpdateUserError('No changes made');
             return;
         }
-        if(imageFileUploading){
-            setUpdateUserError("Image is being uploaded");
+
+        if (imageFileUploading) {
+            setUpdateUserError('Please wait for image to upload');
             return;
         }
+
         try {
             dispatch(updateStart());
-            //we need to update the user in the database
-            //we need to update the user in the redux store
-            const res = await fetch(`/api/user/update/${currentUser._id}`,{ 
-                method:'PUT',
-                headers:{
-                    'Content-Type':'application/json',
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                body:JSON.stringify(formData),
+                body: JSON.stringify(formData),
             });
             const data = await res.json();
-            if(!res.ok){
-               dispatch(updateFailure(data.message));
+
+            if (!res.ok) {
+                dispatch(updateFailure(data.message));
                 setUpdateUserError(data.message);
-            }else{
+            } else {
                 dispatch(updateSuccess(data));
-                setUpdateUserSuccess("User updated successfully");
+                setUpdateUserSuccess("User's profile updated successfully");
+                setFormData({});
             }
-            
         } catch (error) {
             dispatch(updateFailure(error.message));
             setUpdateUserError(error.message);
         }
     };
 
-  return (
-    <div className='max-w-lg mx-auto p-3 w-full'>
-        <h1 className='my-7 text-center font-semibold text-3xl'>Profile</h1>
-        <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
-            <input type="file" accept = 'image/*' onChange={handleImageChange} ref={filePickerRef} hidden/>
-            <div className='relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full' onClick={()=>{
-                filePickerRef.current.click();
-            }}>
-
-            {imageFileUploadProgress && (
-                <CircularProgressbar
-                 value = {imageFileUploadProgress || 0} 
-                text={'${imageFileUploadingProgress}%'}
-                    strokeWidth={5}
-                    styles={{
-                        root:{
-                            width:'100%',
-                            height:'100%',
-                            position:'absolute',
-                            top:0,
-                            left:0,
-                        },
-                        path:{
-                            stroke: `rgba(62, 152, 199, ${
-                                imageFileUploadProgress / 100
-                              })`,
-                        },
-                    }}
-                />
-            )
+    const handleDeleteUser = async () => {
+        setShowModal(false);
+        try {
+            dispatch(deleteUserStart());
+            const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                dispatch(deleteUserFailure(data.message));
+            } else {
+                dispatch(deleteUserSuccess(data));
             }
-            <img src={imageFileURL || currentUser.profilePicture} alt="user" className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${imageFileUploadProgress && imageFileUploadProgress<100 && 'opacity-55'}`} />
+        } catch (error) {
+            dispatch(deleteUserFailure(error.message));
+        }
+    };
+
+    return (
+        <div className="max-w-lg mx-auto p-3 w-full">
+            <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
+
+            {/* User Statistics Section */}
+            <div className="mb-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900 dark:to-purple-900 rounded-lg">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Your Stats</h2>
+                {statsLoading ? (
+                    <p className="text-gray-600 dark:text-gray-400">Loading stats...</p>
+                ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Total Blogs</p>
+                            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{userStats.blogs}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Total Likes</p>
+                            <p className="text-3xl font-bold text-pink-600 dark:text-pink-400">{userStats.likes}</p>
+                        </div>
+                        <div className="col-span-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Member Since</p>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {new Date(currentUser.createdAt).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
-            {imageFileUploadError &&
-            <Alert color='failure'>
-                {imageFileUploadError}
-            </Alert>
-            }
-            <TextInput type = 'text' id='username'
-            placeholder='username'
-            defaultValue={currentUser.username} onChange={handleChange}/>
 
-            <TextInput type = 'email' id='email'
-            placeholder='email'
-            defaultValue={currentUser.email} onChange={handleChange}/>
-
-            <TextInput type = 'password' id='password'
-            placeholder='password'
-            />
-            <Button type='submit' gradientDuoTone='purpleToPink' outline>
-                Update
-                </Button>   
-        </form>
-        <div className='text-red-500 flex justify-between mt-5'>
-            <span className='cursor-pointer'>
-                Delete Account
-            </span>
-            <span className='cursor-pointer'>
-                Sign Out
-            </span>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div
+                    onClick={() => filePickerRef.current.click()}
+                    className="relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full"
+                >
+                    {imageFileUploadProgress && (
+                        <CircularProgressbar
+                            value={imageFileUploadProgress}
+                            text={`${imageFileUploadProgress}%`}
+                            strokeWidth={5}
+                            styles={{
+                                root: {
+                                    width: '100%',
+                                    height: '100%',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                },
+                                path: {
+                                    stroke: `rgba(62, 252, 148, ${imageFileUploadProgress / 100})`,
+                                },
+                            }}
+                        />
+                    )}
+                    <img
+                        src={imageFileURL || currentUser.profilePicture}
+                        alt="user"
+                        className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${imageFileUploadProgress && imageFileUploadProgress < 100 && 'opacity-60'
+                            }`}
+                    />
+                </div>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    ref={filePickerRef}
+                    hidden
+                />
+                {imageFileUploadError && <Alert color="failure">{imageFileUploadError}</Alert>}
+                <TextInput
+                    type="text"
+                    id="username"
+                    placeholder="username"
+                    defaultValue={currentUser.username}
+                    onChange={handleChange}
+                />
+                <TextInput
+                    type="email"
+                    id="email"
+                    placeholder="email"
+                    defaultValue={currentUser.email}
+                    onChange={handleChange}
+                />
+                <TextInput
+                    type="password"
+                    id="password"
+                    placeholder="password"
+                    onChange={handleChange}
+                />
+                <Button
+                    type="submit"
+                    gradientDuoTone="purpleToBlue"
+                    outline
+                    disabled={loading || imageFileUploading}
+                >
+                    {loading ? 'Loading...' : 'Update'}
+                </Button>
+                {currentUser.isAdmin && (
+                    <Link to="/create-post">
+                        <Button
+                            type="button"
+                            gradientDuoTone="purpleToPink"
+                            className="w-full"
+                        >
+                            Create a post
+                        </Button>
+                    </Link>
+                )}
+            </form>
+            <div className="text-red-500 flex justify-between mt-5">
+                <span
+                    onClick={() => setShowModal(true)}
+                    className="cursor-pointer"
+                >
+                    Delete Account
+                </span>
+                <span className="cursor-pointer" onClick={handleSubmit}>
+                    Sign Out
+                </span>
+            </div>
+            {updateUserSuccess && (
+                <Alert color="success" className="mt-5">
+                    {updateUserSuccess}
+                </Alert>
+            )}
+            {updateUserError && (
+                <Alert color="failure" className="mt-5">
+                    {updateUserError}
+                </Alert>
+            )}
+            {error && (
+                <Alert color="failure" className="mt-5">
+                    {error}
+                </Alert>
+            )}
+            <Modal
+                show={showModal}
+                onClose={() => setShowModal(false)}
+                popup
+                size="md"
+            >
+                <Modal.Header />
+                <Modal.Body>
+                    <div className="text-center">
+                        <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
+                        <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
+                            Are you sure you want to delete your account?
+                        </h3>
+                        <div className="flex justify-center gap-4">
+                            <Button color="failure" onClick={handleDeleteUser}>
+                                Yes, I'm sure
+                            </Button>
+                            <Button color="gray" onClick={() => setShowModal(false)}>
+                                No, cancel
+                            </Button>
+                        </div>
+                    </div>
+                </Modal.Body>
+            </Modal>
         </div>
-        {updateUserSuccess && (
-            <Alert color='success' className='mt-5'>
-                {updateUserSuccess}
-            </Alert>
-        )}
-        {updateUserError && (
-            <Alert color='failure' className='mt-5'>
-                {updateUserError}
-            </Alert>
-        )}
-    </div>
-  );
-};
-
-/*in order to keep the aspect ration of the image we use object-cover so if someone uploads a rectangular image it will be cropped to be a square*/
-
-//useEffect react hook : so any time new image is uploaded we want to convert it to a URL so that we can display it in the image tag
-
-//now we are going to firebase and activate our storage get the info and then we are going to upload the image to the firebase storage
+    );
+}

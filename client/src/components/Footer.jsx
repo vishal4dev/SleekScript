@@ -5,9 +5,9 @@ import { BsDribbble, BsFacebook, BsGithub, BsInstagram, BsTwitter } from 'react-
 
 export default function FooterCom() {
   return (
-  <Footer container className='border border-t-8 border-teal-500 '>
+  <Footer container className='border border-t-8 border-teal-500 mt-12'>
     <div className='w-full max-w-7xl mx-auto'>
-        <div className='grid w-full justify-between sm:flex md:grid-cols-1'>
+        <div className='grid w-full justify-between sm:flex md:grid-cols-1 mb-8'>
             <div className='mt-5'>
               <Link
                 to="/"
@@ -17,31 +17,39 @@ export default function FooterCom() {
                 </span>
                 Script
               </Link>
+              <p className='text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-sm'>
+                A modern blogging platform where creators share their stories, ideas, and insights with the world.
+              </p>
             </div>
             <div className='grid grid-cols-2 gap-8 mt-4 sm:grid-cols-3 sm:gap-6'>
                 <div>
-
-               <Footer.Title title = 'About' />
+               <Footer.Title title = 'Resources' />
                 <Footer.LinkGroup col>
                     <Footer.Link
-                    href='/about'
+                    href='/'
                     target='_blank'
                     rel='noopener noreferrer'>
-                    About Us
+                    Explore Blogs
                     </Footer.Link>
 
                     <Footer.Link
-                    href='/contact'
+                    href='/add-blog'
                     target='_blank'
                     rel='noopener noreferrer'>
-                    Contact Us
+                    Create Blog
+                    </Footer.Link>
+
+                    <Footer.Link
+                    href='/projects'
+                    target='_blank'
+                    rel='noopener noreferrer'>
+                    My Blogs
                     </Footer.Link>
                 </Footer.LinkGroup>
                 </div>
 
             <div>
-
-                <Footer.Title title = 'Follow us' />
+               <Footer.Title title = 'Follow us' />
                 <Footer.LinkGroup col>
                     <Footer.Link
                     href='#'
@@ -79,7 +87,6 @@ export default function FooterCom() {
                     </div>                           
             </div>
         </div>
-      
       
        <Footer.Divider/>
        <div className='w-full sm:flex sm:items-center sm:justify-between '>

@@ -4,17 +4,14 @@ import { initializeApp } from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
-console.log(import.meta.env.VITE_FIREBASE_API_KEY);
-//there is a problem with the import.meta.env.VITE_FIREBASE_API_KEY so I will use the old way
-//that is directly using the api key
-
+// Using environment variables from .env.local
 const firebaseConfig = {
-  apiKey: "AIzaSyABVl9_vgnEAhBokfFkqFy9heT62FYpfEE",
-  authDomain: "sleekscript-144d9.firebaseapp.com",
-  projectId: "sleekscript-144d9",
-  storageBucket: "sleekscript-144d9.appspot.com",
-  messagingSenderId: "941852920611",
-  appId: "1:941852920611:web:303ce05461cc7c1cd15a96"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
